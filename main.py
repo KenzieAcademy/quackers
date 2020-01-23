@@ -8,10 +8,24 @@ import slack
 import requests
 from flask import Flask, request, jsonify
 
+# *********************************************
+# EDIT HERE
+# *********************************************
+
+# map is in the following format:
+# string name of originating channel: string name of coach channel
+# example:
+# 'joe-slackbot-testing': 'joe-slackbot-coaches'
+channel_map = {
+    'joe-slackbot-testing': 'joe-slackbot-coaches',
+}
+
+# *********************************************
+# DO NOT EDIT BEYOND THIS POINT
+# *********************************************
+
 dotenv.load_dotenv()
-
 client = slack.WebClient(token=os.environ["BOT_USER_OAUTH_ACCESS_TOKEN"])
-
 app = Flask(__name__)
 
 modal_start = {
@@ -74,9 +88,31 @@ modal_start = {
     ]
 }
 
+def get_coach_channel(c):
+    result = channel_map[c]
+    if not result:
+        raise Exception("No matching channel found!")
+    if not result.startswith("#"):
+        result = "#{}".format(result)
 
-def get_user_name(user_id):
-    result = requests.get()
+    return result
+
+
+def post_message_to_coaches(user, channel, question, info):
+    ch = get_coach_channel(channel)
+    message = (
+        f"Received request for help from {user} with the following info:\n\n",
+        f"Question: {question}\n",
+        f"Additional info: {info}\n\n",
+        "React to this with :heavy_check_mark: if you'll reach out to the student",
+        " and resolve."
+    )
+
+    client.chat_postMessage(
+        channel=ch,
+        text=message,
+        icon_emoji=":qbert:"
+    )
 
 
 @app.route('/questionfollowup/', methods=['POST'])
@@ -89,23 +125,28 @@ def questionfollowup():
     # be in won't always be the same. We need to pull the ID out of the rest of the
     # response before we go hunting for the data we need.
     # Bonus: every block will have an ID! Just... only one of them will be right.
-    q_block_id = None
+    channel = None
+    original_q = None
     addnl_info_block_id = None
+
     for block in data['payload']['view']['blocks']:
         if block.get('type') == "input":
             addnl_info_block_id = block.get('block_id')
         if block.get('type') == "section":
-            q_block_id = block.get('block_id')
+            previous_data = block['text']['text'].split("\n")
+            original_q = previous_data[0][previous_data[0].index(":")+2:]
+            channel = previous_data[1][previous_data[1].index(":")+2:]
 
     dv = data['payload']['view']
-    previous_data = dv['blocks'][q_block_id]['text']['text'].split("\n")
-    original_q = previous_data[0][previous_data[0].index(":")+2:]
-    channel = previous_data[1][previous_data[1].index(":")+2:]
+
     additional_info = dv['state']['values'][addnl_info_block_id]['ml_input']['value']
 
-    print("Their channel is: {}".format(channel))
-    print("Their question was: {}".format(original_q))
-    print("Additional info: {}".format(additional_info))
+    post_message_to_coaches(
+        user=data['payload']['user']['username'],
+        channel=channel,
+        question=original_q,
+        info=additional_info
+    )
 
     return ("", 200)
 
