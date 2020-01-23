@@ -168,7 +168,7 @@ def questionfollowup():
             previous_data = block['text']['text'].split("\n")
             original_q = previous_data[0][previous_data[0].index(":") + 2:]
             channel = previous_data[1][previous_data[1].index(":") + 2:]
-        if block.type == "context":
+        if block.get('type') == "context":
             user_id = block['elements']['text'].split(':')[2].strip()
 
     dv = data['payload']['view']
@@ -199,7 +199,7 @@ def question():
                 data.get('text'), data.get('channel_name')
             )
 
-        new_modal['blocks'][4]['elements']['text'] = \
+        new_modal['blocks'][4]['elements'][0]['text'] = \
             modal_start['blocks'][4]['elements'][0]['text'].format(data.get('user_id'))
 
         client.views_open(
