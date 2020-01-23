@@ -100,6 +100,13 @@ def get_coach_channel(c):
     return result
 
 
+def get_channel_id(channel_name):
+    channels = client.users_conversations().data['channels']
+    for c in channels:
+        if c.get('name') == channel_name:
+            return c['id']
+
+
 def post_message_to_coaches(user, channel, question, info):
     ch = get_coach_channel(channel)
     message = (
@@ -125,7 +132,7 @@ def post_message_to_coaches(user, channel, question, info):
     )
 
 
-def post_message_to_user(user, channel):
+def post_message_to_user(user_id, channel):
     emoji_list = [
         'party',
         'thepuff',
@@ -136,9 +143,10 @@ def post_message_to_user(user, channel):
         'heykirbyhey',
         'capemario'
     ]
+    channel = get_channel_id(channel_name=channel)
     client.chat_postEphemeral(
-        user="@{}".format(user),
-        channel="#{}".format(channel),
+        user=user_id,
+        channel=channel,
         text=(
             "Thanks for reaching out! One of the coaches or facilitators will be"
             " with you shortly! :{}:".format(random.choice(emoji_list))
