@@ -75,36 +75,51 @@ modal_start = {
 }
 
 
+def get_user_name(user_id):
+    result = requests.get()
+
+
 @app.route('/questionfollowup/', methods=['POST'])
 def questionfollowup():
     data = request.form.to_dict()
+    # the payload is a dict... as a string.
     data['payload'] = json.loads(data['payload'])
 
     # slack randomizes the block names. That means the location that the response will
     # be in won't always be the same. We need to pull the ID out of the rest of the
     # response before we go hunting for the data we need.
     # Bonus: every block will have an ID! Just... only one of them will be right.
-    block_id = None
+    q_block_id = None
+    addnl_info_block_id = None
     for block in data['payload']['view']['blocks']:
         if block.get('type') == "input":
-            block_id = block.get('block_id')
+            addnl_info_block_id = block.get('block_id')
+        if block.get('type') == "section":
+            q_block_id = block.get('block_id')
 
-    if not block_id:
-        raise Exception("Didn't get valid block ID!")
+    dv = data['payload']['view']
+    previous_data = dv['blocks'][q_block_id]['text']['text'].split("\n")
+    original_q = previous_data[0][previous_data[0].index(":")+2:]
+    channel = previous_data[1][previous_data[1].index(":")+2:]
+    additional_info = dv['state']['values'][addnl_info_block_id]['ml_input']['value']
 
-    additional_info = data['payload']['view']['state']['values'][block_id]['ml_input']['value']
-    print("THEY SAID: {}".format(additional_info))
-    return ("Thanks! Your question has been passed on!", 200)
+    print("Their channel is: {}".format(channel))
+    print("Their question was: {}".format(original_q))
+    print("Additional info: {}".format(additional_info))
+
+    return ("", 200)
 
 @app.route('/question/', methods=['POST'])
 def question():
     data = request.form.to_dict()
     if trigger_id := data.get('trigger_id'):
         new_modal = deepcopy(modal_start)
-        # stick the original question they asked into the modal so we can retrieve
-        # it in the next section
+        # stick the original question they asked and the channel they asked from
+        # into the modal so we can retrieve it in the next section
         new_modal['blocks'][0]['text']['text'] = \
-            modal_start['blocks'][0]['text']['text'].format(data.get('text'))
+            modal_start['blocks'][0]['text']['text'].format(
+                data.get('text'), data.get('channel_name')
+            )
         resp = {
             "trigger_id": trigger_id,
             "view": new_modal
@@ -117,7 +132,7 @@ def question():
             }
         )
     # return an empty string per slack docs
-    return ('', 200)
+    return ("", 200)
 
 
 if __name__ == "__main__":
