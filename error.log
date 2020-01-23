@@ -1,0 +1,39 @@
+[23/Jan/2020:09:53:02] ENGINE Listening for SIGTERM.
+[23/Jan/2020:09:53:02] ENGINE Listening for SIGHUP.
+[23/Jan/2020:09:53:02] ENGINE Listening for SIGUSR1.
+[23/Jan/2020:09:53:02] ENGINE Bus STARTING
+[23/Jan/2020:09:53:02] ENGINE Serving on http://127.0.0.1:8090
+[23/Jan/2020:09:53:02] ENGINE Bus STARTED
+[23/Jan/2020:09:53:41] ENGINE Keyboard Interrupt: shutting down bus
+[23/Jan/2020:09:53:41] ENGINE Bus STOPPING
+[23/Jan/2020:09:53:41] ENGINE HTTP Server cherrypy._cpwsgi_server.CPWSGIServer(('127.0.0.1', 8090)) shut down
+[23/Jan/2020:09:53:41] ENGINE Bus STOPPED
+[23/Jan/2020:09:53:41] ENGINE Bus EXITING
+[23/Jan/2020:09:53:41] ENGINE Bus EXITED
+[23/Jan/2020:09:53:41] ENGINE Waiting for child threads to terminate...
+[23/Jan/2020:09:53:42] ENGINE Listening for SIGTERM.
+[23/Jan/2020:09:53:42] ENGINE Listening for SIGHUP.
+[23/Jan/2020:09:53:42] ENGINE Listening for SIGUSR1.
+[23/Jan/2020:09:53:42] ENGINE Bus STARTING
+[23/Jan/2020:09:53:42] ENGINE Serving on http://127.0.0.1:8090
+[23/Jan/2020:09:53:42] ENGINE Bus STARTED
+[23/Jan/2020:09:54:17] ENGINE Keyboard Interrupt: shutting down bus
+[23/Jan/2020:09:54:17] ENGINE Bus STOPPING
+[23/Jan/2020:09:54:17] ENGINE HTTP Server cherrypy._cpwsgi_server.CPWSGIServer(('127.0.0.1', 8090)) shut down
+[23/Jan/2020:09:54:17] ENGINE Bus STOPPED
+[23/Jan/2020:09:54:17] ENGINE Bus EXITING
+[23/Jan/2020:09:54:17] ENGINE Bus EXITED
+[23/Jan/2020:09:54:17] ENGINE Waiting for child threads to terminate...
+[23/Jan/2020:09:54:18] ENGINE Listening for SIGTERM.
+[23/Jan/2020:09:54:18] ENGINE Listening for SIGHUP.
+[23/Jan/2020:09:54:18] ENGINE Listening for SIGUSR1.
+[23/Jan/2020:09:54:18] ENGINE Bus STARTING
+[23/Jan/2020:09:54:18] ENGINE Serving on http://127.0.0.1:8090
+[23/Jan/2020:09:54:18] ENGINE Bus STARTED
+[23/Jan/2020:09:56:59] ENGINE Keyboard Interrupt: shutting down bus
+[23/Jan/2020:09:56:59] ENGINE Bus STOPPING
+[23/Jan/2020:09:56:59] ENGINE HTTP Server cherrypy._cpwsgi_server.CPWSGIServer(('127.0.0.1', 8090)) shut down
+[23/Jan/2020:09:56:59] ENGINE Bus STOPPED
+[23/Jan/2020:09:56:59] ENGINE Bus EXITING
+[23/Jan/2020:09:56:59] ENGINE Bus EXITED
+[23/Jan/2020:09:56:59] ENGINE Waiting for child threads to terminate...
