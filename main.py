@@ -200,7 +200,7 @@ def question():
             )
 
         new_modal['blocks'][4]['elements']['text'] = \
-            modal_start['blocks'][4]['elements']['text'].format(data.get('user_id'))
+            modal_start['blocks'][4]['elements'][0]['text'].format(data.get('user_id'))
 
         client.views_open(
             trigger_id=trigger_id,
