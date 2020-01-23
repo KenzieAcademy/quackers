@@ -89,20 +89,22 @@ def questionfollowup():
         if block.get('type') == "input":
             block_id = block.get('block_id')
 
-
     if not block_id:
         raise Exception("Didn't get valid block ID!")
 
-    message = data['payload']['view']['state']['values'][block_id]['ml_input']['value']
-    print("THEY SAID: {}".format(message))
-    return ('', 200)
+    additional_info = data['payload']['view']['state']['values'][block_id]['ml_input']['value']
+    print("THEY SAID: {}".format(additional_info))
+    return ("Thanks! Your question has been passed on!", 200)
 
 @app.route('/question/', methods=['POST'])
 def question():
     data = request.form.to_dict()
     if trigger_id := data.get('trigger_id'):
         new_modal = deepcopy(modal_start)
-        new_modal['blocks'][0]['text']['text'] = modal_start['blocks'][0]['text']['text'].format('aaaa')
+        # stick the original question they asked into the modal so we can retrieve
+        # it in the next section
+        new_modal['blocks'][0]['text']['text'] = \
+            modal_start['blocks'][0]['text']['text'].format(data.get('text'))
         resp = {
             "trigger_id": trigger_id,
             "view": new_modal
@@ -114,7 +116,6 @@ def question():
                 "Authorization": "Bearer {}".format(os.environ["BOT_USER_OAUTH_ACCESS_TOKEN"])
             }
         )
-    # final response: return jsonify({"response_action": "clear"})
     # return an empty string per slack docs
     return ('', 200)
 
