@@ -65,3 +65,7 @@ def question():
     data = request.form.to_dict(flat=False)
 
     return jsonify(modal)
+
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=8000)
