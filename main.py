@@ -1,12 +1,12 @@
-import os
 import json
-
+import os
+import random
 from copy import deepcopy
 
 import dotenv
-import slack
 import requests
-from flask import Flask, request, jsonify
+import slack
+from flask import Flask, request
 
 # *********************************************
 # EDIT HERE
@@ -18,6 +18,7 @@ from flask import Flask, request, jsonify
 # 'joe-slackbot-testing': 'joe-slackbot-coaches'
 channel_map = {
     'joe-slackbot-testing': 'joe-slackbot-coaches',
+    'q1': 'q1-coaches',
 }
 
 # *********************************************
@@ -124,6 +125,27 @@ def post_message_to_coaches(user, channel, question, info):
     )
 
 
+def post_message_to_user(user, channel):
+    emoji_list = [
+        'party',
+        'thepuff',
+        'carlton',
+        'fire',
+        'spinning',
+        'party-parrot',
+        'heykirbyhey',
+        'capemario'
+    ]
+    client.chat_postEphemeral(
+        user="@{}".format(user),
+        channel="#{}".format(channel),
+        text=(
+            "Thanks for reaching out! One of the coaches or facilitators will be"
+            " with you shortly! :{}:".format(random.choice(emoji_list))
+        )
+    )
+
+
 @app.route('/questionfollowup/', methods=['POST'])
 def questionfollowup():
     data = request.form.to_dict()
@@ -149,13 +171,14 @@ def questionfollowup():
     dv = data['payload']['view']
 
     additional_info = dv['state']['values'][addnl_info_block_id]['ml_input']['value']
-
+    username = data['payload']['user']['username']
     post_message_to_coaches(
-        user=data['payload']['user']['username'],
+        user=username,
         channel=channel,
         question=original_q,
         info=additional_info
     )
+    post_message_to_user(user=username, channel=channel)
 
     return ("", 200)
 
