@@ -88,6 +88,7 @@ modal_start = {
     ]
 }
 
+
 def get_coach_channel(c):
     result = channel_map[c]
     if not result:
@@ -110,10 +111,15 @@ def post_message_to_coaches(user, channel, question, info):
 
     client.chat_postMessage(
         channel=ch,
-        text={
-            'type': 'mrkdwn',
-            'text': message
-        },
+        blocks=[
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": message
+                }
+            }
+        ],
         icon_emoji=":qbert:"
     )
 
@@ -137,8 +143,8 @@ def questionfollowup():
             addnl_info_block_id = block.get('block_id')
         if block.get('type') == "section":
             previous_data = block['text']['text'].split("\n")
-            original_q = previous_data[0][previous_data[0].index(":")+2:]
-            channel = previous_data[1][previous_data[1].index(":")+2:]
+            original_q = previous_data[0][previous_data[0].index(":") + 2:]
+            channel = previous_data[1][previous_data[1].index(":") + 2:]
 
     dv = data['payload']['view']
 
@@ -152,6 +158,7 @@ def questionfollowup():
     )
 
     return ("", 200)
+
 
 @app.route('/question/', methods=['POST'])
 def question():
