@@ -101,16 +101,19 @@ def get_coach_channel(c):
 def post_message_to_coaches(user, channel, question, info):
     ch = get_coach_channel(channel)
     message = (
-        f"Received request for help from {user} with the following info:\n\n",
-        f"Question: {question}\n",
-        f"Additional info: {info}\n\n",
-        "React to this with :heavy_check_mark: if you'll reach out to the student",
+        f"Received request for help from @{user} with the following info:\n\n"
+        f"Question: {question}\n"
+        f"Additional info: {info}\n\n"
+        "React to this with :heavy_check_mark: if you'll reach out to the student"
         " and resolve."
     )
 
     client.chat_postMessage(
         channel=ch,
-        text=message,
+        text={
+            'type': 'mrkdwn',
+            'text': message
+        },
         icon_emoji=":qbert:"
     )
 
