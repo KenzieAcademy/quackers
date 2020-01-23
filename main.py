@@ -62,21 +62,30 @@ modal_start = {
 }
 
 
+@app.route('/questionfollowup/', methods=['POST'])
+def questionfollowup():
+    data = request.form.to_dict()
+    breakpoint()
+
+
 @app.route('/question/', methods=['POST'])
 def question():
     data = request.form.to_dict()
     if trigger_id := data.get('trigger_id'):
         resp = {
-            "token": os.environ["BOT_USER_OAUTH_ACCESS_TOKEN"],
             "trigger_id": trigger_id,
             "view": modal_start
         }
         requests.post(
             "https://slack.com/api/views.open",
-            json=resp
+            json=resp,
+            headers={
+                "Authorization": "Bearer {}".format(os.environ["BOT_USER_OAUTH_ACCESS_TOKEN"])
+            }
         )
-
-    # return jsonify(modal)
+    # final response: return jsonify({"response_action": "clear"})
+    # return an empty string per slack docs
+    return ('', 200)
 
 
 if __name__ == "__main__":
