@@ -2,6 +2,7 @@ import os
 
 import dotenv
 import slack
+import requests
 from flask import Flask, request, jsonify
 
 dotenv.load_dotenv()
@@ -10,8 +11,9 @@ client = slack.WebClient(token=os.environ["BOT_USER_OAUTH_ACCESS_TOKEN"])
 
 app = Flask(__name__)
 
-modal = {
+modal_start = {
     "type": "modal",
+    "callback_id": "qbert-step-1",
     "title": {
         "type": "plain_text",
         "text": "QBert!",
@@ -62,9 +64,19 @@ modal = {
 
 @app.route('/question/', methods=['POST'])
 def question():
-    data = request.form.to_dict(flat=False)
+    data = request.form.to_dict()
+    if trigger_id := data.get('trigger_id'):
+        resp = {
+            "token": os.environ["BOT_USER_OAUTH_ACCESS_TOKEN"],
+            "trigger_id": trigger_id,
+            "view": modal_start
+        }
+        requests.post(
+            "https://slack.com/api/views.open",
+            json=resp
+        )
 
-    return jsonify(modal)
+    # return jsonify(modal)
 
 
 if __name__ == "__main__":
