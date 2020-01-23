@@ -21,9 +21,14 @@ class Root(object):
         return "thhhhtbbbbbt"
 
 
-cherrypy.config.update({'server.socket_port': 8090,
-                        'engine.autoreload.on': False,
-                        'log.access_file': './access.log',
-                        'log.error_file': './error.log'})
+cherrypy.config.update(
+    {
+        'server.socket_port': 8000,
+        'server.socket_host': '0.0.0.0',
+        'engine.autoreload.on': False,
+        'log.access_file': './access.log',
+        'log.error_file': './error.log'
+    }
+)
 cherrypy.quickstart(Root())
 
