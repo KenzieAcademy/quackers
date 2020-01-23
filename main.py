@@ -19,25 +19,25 @@ modal_start = {
     "title": {
         "type": "plain_text",
         "text": "QBert!",
-        "emoji": True
+        "emoji": true
     },
     "submit": {
         "type": "plain_text",
         "text": "Submit",
-        "emoji": True
+        "emoji": true
     },
     "close": {
         "type": "plain_text",
         "text": "Cancel",
-        "emoji": True
+        "emoji": true
     },
     "blocks": [
         {
             "type": "section",
             "text": {
                 "type": "plain_text",
-                "text": "The question was: {}",
-                "emoji": True
+                "text": "The question was: {0}\nYour channel: {1}",
+                "emoji": true
             }
         },
         {
@@ -48,7 +48,7 @@ modal_start = {
             "element": {
                 "type": "plain_text_input",
                 "action_id": "ml_input",
-                "multiline": True
+                "multiline": true
             },
             "label": {
                 "type": "plain_text",
