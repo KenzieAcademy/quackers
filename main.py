@@ -82,7 +82,7 @@ modal_start = {
             "elements": [
                 {
                     "type": "mrkdwn",
-                    "text": "*NOTE*: Your question won't get sent to the coaches until you click submit!"
+                    "text": "*NOTE*: Your question won't get sent to the coaches until you click submit!\nID: {}"
                 }
             ]
         }
@@ -159,6 +159,7 @@ def questionfollowup():
     channel = None
     original_q = None
     addnl_info_block_id = None
+    user_id = None
 
     for block in data['payload']['view']['blocks']:
         if block.get('type') == "input":
@@ -167,18 +168,21 @@ def questionfollowup():
             previous_data = block['text']['text'].split("\n")
             original_q = previous_data[0][previous_data[0].index(":") + 2:]
             channel = previous_data[1][previous_data[1].index(":") + 2:]
+        if block.type == "context":
+            user_id = block['elements']['text'].split(':')[2].strip()
 
     dv = data['payload']['view']
 
     additional_info = dv['state']['values'][addnl_info_block_id]['ml_input']['value']
     username = data['payload']['user']['username']
+
     post_message_to_coaches(
         user=username,
         channel=channel,
         question=original_q,
         info=additional_info
     )
-    post_message_to_user(user=username, channel=channel)
+    post_message_to_user(user=user_id, channel=channel)
 
     return ("", 200)
 
@@ -194,16 +198,13 @@ def question():
             modal_start['blocks'][0]['text']['text'].format(
                 data.get('text'), data.get('channel_name')
             )
-        resp = {
-            "trigger_id": trigger_id,
-            "view": new_modal
-        }
-        requests.post(
-            "https://slack.com/api/views.open",
-            json=resp,
-            headers={
-                "Authorization": "Bearer {}".format(os.environ["BOT_USER_OAUTH_ACCESS_TOKEN"])
-            }
+
+        new_modal['blocks'][4]['elements']['text'] = \
+            modal_start['blocks'][4]['elements']['text'].format(data.get('user_id'))
+
+        client.views_open(
+            trigger_id=trigger_id,
+            view=new_modal
         )
     # return an empty string per slack docs
     return ("", 200)
