@@ -177,7 +177,7 @@ def questionfollowup():
             original_q = previous_data[0][previous_data[0].index(":") + 2:]
             channel = previous_data[1][previous_data[1].index(":") + 2:]
         if block.get('type') == "context":
-            user_id = block['elements']['text'].split(':')[2].strip()
+            user_id = block['elements'][0]['text'].split(':')[2].strip()
 
     dv = data['payload']['view']
 
@@ -190,7 +190,7 @@ def questionfollowup():
         question=original_q,
         info=additional_info
     )
-    post_message_to_user(user=user_id, channel=channel)
+    post_message_to_user(user_id=user_id, channel=channel)
 
     return ("", 200)
 
