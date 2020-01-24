@@ -18,9 +18,20 @@ from flask import Flask, request
 # 'joe-slackbot-testing': 'joe-slackbot-coaches'
 channel_map = {
     'joe-slackbot-testing': 'joe-slackbot-coaches',
-    'q1': 'q1-coaches',
+    'se-january-2020': 'se-jan-2020-coaches',
 }
 
+# for responses returned to the student
+emoji_list = [
+    'party',
+    'thepuff',
+    'carlton',
+    'fire',
+    'spinning',
+    'party-parrot',
+    'heykirbyhey',
+    'capemario'
+]
 # *********************************************
 # DO NOT EDIT BEYOND THIS POINT
 # *********************************************
@@ -132,24 +143,16 @@ def post_message_to_coaches(user, channel, question, info):
     )
 
 
-def post_message_to_user(user_id, channel):
-    emoji_list = [
-        'party',
-        'thepuff',
-        'carlton',
-        'fire',
-        'spinning',
-        'party-parrot',
-        'heykirbyhey',
-        'capemario'
-    ]
+def post_message_to_user(user_id, channel, question):
     channel = get_channel_id(channel_name=channel)
     client.chat_postEphemeral(
         user=user_id,
         channel=channel,
         text=(
             "Thanks for reaching out! One of the coaches or facilitators will be"
-            " with you shortly! :{}:".format(random.choice(emoji_list))
+            " with you shortly! :{}: Your question was: {}".format(
+                random.choice(emoji_list), question
+            )
         )
     )
 
@@ -190,7 +193,7 @@ def questionfollowup():
         question=original_q,
         info=additional_info
     )
-    post_message_to_user(user_id=user_id, channel=channel)
+    post_message_to_user(user_id=user_id, channel=channel, question=original_q)
 
     return ("", 200)
 
