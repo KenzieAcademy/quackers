@@ -22,6 +22,7 @@ channel_map = {
     'se-january-2020': 'se-jan-2020-coaches',
     'se-7': 'staff-se7',
     'se-6': 'se-q4-staff',
+    'se-october-2019': 'se-october-coaches',
 }
 
 # for responses returned to the student
