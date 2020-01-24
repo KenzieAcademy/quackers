@@ -19,6 +19,7 @@ from flask import Flask, request
 channel_map = {
     'joe-slackbot-testing': 'joe-slackbot-coaches',
     'se-january-2020': 'se-jan-2020-coaches',
+    'se-7': 'staff-se7',
 }
 
 # for responses returned to the student
