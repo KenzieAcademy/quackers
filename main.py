@@ -159,7 +159,7 @@ def post_to_airtable(user_id, slack_username, channel, question, info):
             'Question': question,
             'Additional Info': info,
             'Channel': channel,
-            'Student': [student_id],
+            'Student': [student_id] if student_id else None,
             'Unresolved User': slack_username if not student_id else '',
             'Date': datetime.now().isoformat()
         }
