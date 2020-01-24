@@ -10,6 +10,7 @@ slackclient = "^2.5.0"
 python-dotenv = "^0.10.5"
 flask = "^1.1.1"
 requests = "^2.22.0"
+airtable-python-wrapper = "^0.12.0"
 
 [tool.poetry.dev-dependencies]
 black = "^19.10b0"

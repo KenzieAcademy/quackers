@@ -2,10 +2,11 @@ import json
 import os
 import random
 from copy import deepcopy
+from datetime import datetime
 
 import dotenv
-import requests
 import slack
+from airtable import Airtable
 from flask import Flask, request
 
 # *********************************************
@@ -40,6 +41,9 @@ emoji_list = [
 
 dotenv.load_dotenv()
 client = slack.WebClient(token=os.environ["BOT_USER_OAUTH_ACCESS_TOKEN"])
+a_s = Airtable(os.environ.get('AIRTABLE_BASE_ID'), 'Students')
+a_q = Airtable(os.environ.get('AIRTABLE_BASE_ID'), 'QBert Questions')
+
 app = Flask(__name__)
 
 modal_start = {
@@ -145,6 +149,23 @@ def post_message_to_coaches(user, channel, question, info):
     )
 
 
+def post_to_airtable(user_id, slack_username, channel, question, info):
+    student = a_s.search('Slack ID', user_id)
+    student_id = None
+    if student != []:
+        student_id = student[0]['id']
+    a_q.insert(
+        {
+            'Question': question,
+            'Additional Info': info,
+            'Channel': channel,
+            'Student': [student_id],
+            'Unresolved User': slack_username if not student_id else '',
+            'Date': datetime.now().isoformat()
+        }
+    )
+
+
 def post_message_to_user(user_id, channel, question):
     channel = get_channel_id(channel_name=channel)
     client.chat_postEphemeral(
@@ -195,6 +216,7 @@ def questionfollowup():
         question=original_q,
         info=additional_info
     )
+    post_to_airtable(user_id, username, channel, original_q, additional_info)
     post_message_to_user(user_id=user_id, channel=channel, question=original_q)
 
     return ("", 200)

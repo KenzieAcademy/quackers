@@ -17,6 +17,18 @@ yarl = ">=1.0,<2.0"
 speedups = ["aiodns", "brotlipy", "cchardet"]
 
 [[package]]
+category = "main"
+description = "Python API Wrapper for the Airtable API"
+name = "airtable-python-wrapper"
+optional = false
+python-versions = "*"
+version = "0.12.0"
+
+[package.dependencies]
+requests = ">=2"
+six = ">=1.10"
+
+[[package]]
 category = "dev"
 description = "A small Python module for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
 name = "appdirs"
@@ -372,9 +384,8 @@ security = ["pyOpenSSL (>=0.14)", "cryptography (>=1.3.4)", "idna (>=2.0.0)"]
 socks = ["PySocks (>=1.5.6,<1.5.7 || >1.5.7)", "win-inet-pton"]
 
 [[package]]
-category = "dev"
+category = "main"
 description = "Python 2 and 3 compatibility utilities"
-marker = "python_version >= \"3.4\""
 name = "six"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
@@ -475,7 +486,7 @@ idna = ">=2.0"
 multidict = ">=4.0"
 
 [metadata]
-content-hash = "0f84a95d25a1486737f1e978b780a5e75b17d7a63b595c4486b4aa2c55c4678d"
+content-hash = "107533ac4ae28b3a78eccc128256c652664234e83abd020fb4ef1edfdbdbc48a"
 python-versions = "^3.8"
 
 [metadata.files]
@@ -492,6 +503,10 @@ aiohttp = [
     {file = "aiohttp-3.6.2-cp37-cp37m-win_amd64.whl", hash = "sha256:32e5f3b7e511aa850829fbe5aa32eb455e5534eaa4b1ce93231d00e2f76e5654"},
     {file = "aiohttp-3.6.2-py3-none-any.whl", hash = "sha256:460bd4237d2dbecc3b5ed57e122992f60188afe46e7319116da5eb8a9dfedba4"},
     {file = "aiohttp-3.6.2.tar.gz", hash = "sha256:259ab809ff0727d0e834ac5e8a283dc5e3e0ecc30c4d80b3cd17a4139ce1f326"},
+]
+airtable-python-wrapper = [
+    {file = "airtable-python-wrapper-0.12.0.tar.gz", hash = "sha256:f147cdef108787c297a24c8fd2a1a339eda982f8cf0c46e0973571420e74028b"},
+    {file = "airtable_python_wrapper-0.12.0-py2.py3-none-any.whl", hash = "sha256:0650032e531048ba5fe3b06dfe56d0344eb9917d91b82c0d37fa714ae8ea7983"},
 ]
 appdirs = [
     {file = "appdirs-1.4.3-py2.py3-none-any.whl", hash = "sha256:d8b24664561d0d34ddfaec54636d502d7cea6e29c3eaf68f3df6180863e2166e"},
