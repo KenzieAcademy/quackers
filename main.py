@@ -3,6 +3,7 @@ import os
 import random
 from copy import deepcopy
 from datetime import datetime
+from pprint import pprint as pp
 
 import dotenv
 import slack
@@ -186,6 +187,7 @@ def questionfollowup():
     data = request.form.to_dict()
     # the payload is a dict... as a string.
     data['payload'] = json.loads(data['payload'])
+    pp(data['payload'])
 
     # slack randomizes the block names. That means the location that the response will
     # be in won't always be the same. We need to pull the ID out of the rest of the
@@ -227,6 +229,9 @@ def questionfollowup():
 def question():
     data = request.form.to_dict()
     if trigger_id := data.get('trigger_id'):
+        pp(data)
+        # copy the modal so that we don't accidentally modify the version in memory.
+        # the garbage collector will take care of the copies later.
         new_modal = deepcopy(modal_start)
         # stick the original question they asked and the channel they asked from
         # into the modal so we can retrieve it in the next section
