@@ -4,6 +4,7 @@ import random
 from copy import deepcopy
 from datetime import datetime
 from pprint import pprint as pp
+import logging
 
 import dotenv
 import slack
@@ -47,6 +48,8 @@ a_s = Airtable(os.environ.get('AIRTABLE_BASE_ID'), 'Students')
 a_q = Airtable(os.environ.get('AIRTABLE_BASE_ID'), 'QBert Questions')
 
 app = Flask(__name__)
+
+gunicorn_logger = logging.getLogger('gunicorn.error')
 
 modal_start = {
     "type": "modal",
@@ -187,7 +190,7 @@ def questionfollowup():
     data = request.form.to_dict()
     # the payload is a dict... as a string.
     data['payload'] = json.loads(data['payload'])
-    pp(data['payload'])
+    gunicorn_logger.error(pp(data['payload']))
 
     # slack randomizes the block names. That means the location that the response will
     # be in won't always be the same. We need to pull the ID out of the rest of the
@@ -229,7 +232,7 @@ def questionfollowup():
 def question():
     data = request.form.to_dict()
     if trigger_id := data.get('trigger_id'):
-        pp(data)
+        gunicorn_logger.error(pp(data))
         # copy the modal so that we don't accidentally modify the version in memory.
         # the garbage collector will take care of the copies later.
         new_modal = deepcopy(modal_start)
