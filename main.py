@@ -201,30 +201,6 @@ def post_message_to_user(user_id, channel, question):
 
 
 @fire_and_forget
-def process_question(request):
-    data = request.form.to_dict()
-    if trigger_id := data.get('trigger_id'):
-        logger.debug(pp(data))
-        # copy the modal so that we don't accidentally modify the version in memory.
-        # the garbage collector will take care of the copies later.
-        new_modal = deepcopy(modal_start)
-        # stick the original question they asked and the channel they asked from
-        # into the modal so we can retrieve it in the next section
-        new_modal['blocks'][0]['text']['text'] = \
-            modal_start['blocks'][0]['text']['text'].format(
-                data.get('text'), data.get('channel_name')
-            )
-
-        new_modal['blocks'][4]['elements'][0]['text'] = \
-            modal_start['blocks'][4]['elements'][0]['text'].format(data.get('user_id'))
-
-        client.views_open(
-            trigger_id=trigger_id,
-            view=new_modal
-        )
-
-
-@fire_and_forget
 def process_question_followup(request):
     data = request.form.to_dict()
     # the payload is a dict... as a string.
@@ -273,7 +249,26 @@ def questionfollowup():
 
 @app.route('/question/', methods=['POST'])
 def question():
-    process_question(request)
+    data = request.form.to_dict()
+    if trigger_id := data.get('trigger_id'):
+        logger.debug(pp(data))
+        # copy the modal so that we don't accidentally modify the version in memory.
+        # the garbage collector will take care of the copies later.
+        new_modal = deepcopy(modal_start)
+        # stick the original question they asked and the channel they asked from
+        # into the modal so we can retrieve it in the next section
+        new_modal['blocks'][0]['text']['text'] = \
+            modal_start['blocks'][0]['text']['text'].format(
+                data.get('text'), data.get('channel_name')
+            )
+
+        new_modal['blocks'][4]['elements'][0]['text'] = \
+            modal_start['blocks'][4]['elements'][0]['text'].format(data.get('user_id'))
+
+        client.views_open(
+            trigger_id=trigger_id,
+            view=new_modal
+        )
     # return an empty string per slack docs
     return ("", 200)
 
