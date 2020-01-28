@@ -125,7 +125,33 @@ modal_start = {
         }
     ]
 }
-
+error_modal = {
+    "type": "modal",
+    "title": {
+        "type": "plain_text",
+        "text": "Hey! Listen! 🌟",
+        "emoji": True
+    },
+    "close": {
+        "type": "plain_text",
+        "text": "OK",
+        "emoji": True
+    },
+    "blocks": [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "I'm not set up to run in this channel; you'll have to call me from your cohort channel. Sorry!"
+            }
+        },
+        {
+            "type": "image",
+            "image_url": "https://gamepedia.cursecdn.com/zelda_gamepedia_en/0/08/OoT3D_Navi_Artwork.png?version=61b243ef9637615abdf7534b17361c7a",
+            "alt_text": "Navi from The Legend of Zelda - a blue glowing orb with fairy wings. Artwork from the Ocarina of Time 3D."
+        }
+    ]
+}
 
 def get_coach_channel(c):
     result = channel_map[c]
@@ -240,9 +266,24 @@ def process_question_followup(data):
     post_message_to_user(user_id=user_id, channel=channel, question=original_q)
 
 
-@fire_and_forget
-def process_question(data):
+@app.route('/questionfollowup/', methods=['POST'])
+def questionfollowup():
+    process_question_followup(request.form.to_dict())
+    return ("", 200)
+
+
+@app.route('/question/', methods=['POST'])
+def question():
+    data = request.form.to_dict()
     if trigger_id := data.get('trigger_id'):
+        # first we need to verify that we're being called in the right place
+        if data.get('channel_name') not in channel_map.keys():
+            client.views_open(
+                trigger_id=trigger_id,
+                view=error_modal
+            )
+            return ("", 200)
+
         logger.debug(pp(data))
         # copy the modal so that we don't accidentally modify the version in memory.
         # the garbage collector will take care of the copies later.
@@ -261,18 +302,6 @@ def process_question(data):
             trigger_id=trigger_id,
             view=new_modal
         )
-
-
-@app.route('/questionfollowup/', methods=['POST'])
-def questionfollowup():
-    process_question_followup(request.form.to_dict())
-    return ("", 200)
-
-
-@app.route('/question/', methods=['POST'])
-def question():
-    data = request.form.to_dict()
-    process_question(data)
     # return an empty string as fast as possible per slack docs
     return ("", 200)
 
