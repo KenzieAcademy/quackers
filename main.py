@@ -1,12 +1,12 @@
+import asyncio
 import json
+import logging
 import os
 import random
 from copy import deepcopy
 from datetime import datetime
 from pprint import pprint as pp
-import logging
 
-import requests
 import dotenv
 import slack
 from airtable import Airtable
@@ -56,6 +56,15 @@ formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 hdlr.setFormatter(formatter)
 logger.addHandler(hdlr)
 logger.setLevel(logging.WARNING)
+
+
+# https://stackoverflow.com/a/53255955
+def fire_and_forget(f):
+    def wrapped(*args, **kwargs):
+        return asyncio.get_event_loop().run_in_executor(None, f, *args, *kwargs)
+
+    return wrapped
+
 
 modal_start = {
     "type": "modal",
@@ -116,7 +125,33 @@ modal_start = {
         }
     ]
 }
-
+error_modal = {
+    "type": "modal",
+    "title": {
+        "type": "plain_text",
+        "text": "Hey! Listen! 🌟",
+        "emoji": True
+    },
+    "close": {
+        "type": "plain_text",
+        "text": "OK",
+        "emoji": True
+    },
+    "blocks": [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "I'm not set up to run in this channel; you'll have to call me from your cohort channel. Sorry!"
+            }
+        },
+        {
+            "type": "image",
+            "image_url": "https://gamepedia.cursecdn.com/zelda_gamepedia_en/0/08/OoT3D_Navi_Artwork.png?version=61b243ef9637615abdf7534b17361c7a",
+            "alt_text": "Navi from The Legend of Zelda - a blue glowing orb with fairy wings. Artwork from the Ocarina of Time 3D."
+        }
+    ]
+}
 
 def get_coach_channel(c):
     result = channel_map[c]
@@ -191,9 +226,8 @@ def post_message_to_user(user_id, channel, question):
     )
 
 
-@app.route('/questionfollowup/', methods=['POST'])
-def questionfollowup():
-    data = request.form.to_dict()
+@fire_and_forget
+def process_question_followup(data):
     # the payload is a dict... as a string.
     data['payload'] = json.loads(data['payload'])
     logger.debug(pp(data['payload']))
@@ -231,6 +265,10 @@ def questionfollowup():
     post_to_airtable(user_id, username, channel, original_q, additional_info)
     post_message_to_user(user_id=user_id, channel=channel, question=original_q)
 
+
+@app.route('/questionfollowup/', methods=['POST'])
+def questionfollowup():
+    process_question_followup(request.form.to_dict())
     return ("", 200)
 
 
@@ -238,6 +276,14 @@ def questionfollowup():
 def question():
     data = request.form.to_dict()
     if trigger_id := data.get('trigger_id'):
+        # first we need to verify that we're being called in the right place
+        if data.get('channel_name') not in channel_map.keys():
+            client.views_open(
+                trigger_id=trigger_id,
+                view=error_modal
+            )
+            return ("", 200)
+
         logger.debug(pp(data))
         # copy the modal so that we don't accidentally modify the version in memory.
         # the garbage collector will take care of the copies later.
@@ -256,7 +302,7 @@ def question():
             trigger_id=trigger_id,
             view=new_modal
         )
-    # return an empty string per slack docs
+    # return an empty string as fast as possible per slack docs
     return ("", 200)
 
 
