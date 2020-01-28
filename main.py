@@ -5,6 +5,7 @@ from copy import deepcopy
 from datetime import datetime
 from pprint import pprint as pp
 import logging
+import asyncio
 
 import requests
 import dotenv
@@ -56,6 +57,14 @@ formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 hdlr.setFormatter(formatter)
 logger.addHandler(hdlr)
 logger.setLevel(logging.WARNING)
+
+
+def fire_and_forget(f):
+    def wrapped(*args, **kwargs):
+        return asyncio.get_event_loop().run_in_executor(None, f, *args, *kwargs)
+
+    return wrapped
+
 
 modal_start = {
     "type": "modal",
@@ -191,8 +200,32 @@ def post_message_to_user(user_id, channel, question):
     )
 
 
-@app.route('/questionfollowup/', methods=['POST'])
-def questionfollowup():
+@fire_and_forget
+def process_question(request):
+    data = request.form.to_dict()
+    if trigger_id := data.get('trigger_id'):
+        logger.debug(pp(data))
+        # copy the modal so that we don't accidentally modify the version in memory.
+        # the garbage collector will take care of the copies later.
+        new_modal = deepcopy(modal_start)
+        # stick the original question they asked and the channel they asked from
+        # into the modal so we can retrieve it in the next section
+        new_modal['blocks'][0]['text']['text'] = \
+            modal_start['blocks'][0]['text']['text'].format(
+                data.get('text'), data.get('channel_name')
+            )
+
+        new_modal['blocks'][4]['elements'][0]['text'] = \
+            modal_start['blocks'][4]['elements'][0]['text'].format(data.get('user_id'))
+
+        client.views_open(
+            trigger_id=trigger_id,
+            view=new_modal
+        )
+
+
+@fire_and_forget
+def process_question_followup(request):
     data = request.form.to_dict()
     # the payload is a dict... as a string.
     data['payload'] = json.loads(data['payload'])
@@ -231,31 +264,16 @@ def questionfollowup():
     post_to_airtable(user_id, username, channel, original_q, additional_info)
     post_message_to_user(user_id=user_id, channel=channel, question=original_q)
 
+
+@app.route('/questionfollowup/', methods=['POST'])
+def questionfollowup():
+    process_question_followup(request)
     return ("", 200)
 
 
 @app.route('/question/', methods=['POST'])
 def question():
-    data = request.form.to_dict()
-    if trigger_id := data.get('trigger_id'):
-        logger.debug(pp(data))
-        # copy the modal so that we don't accidentally modify the version in memory.
-        # the garbage collector will take care of the copies later.
-        new_modal = deepcopy(modal_start)
-        # stick the original question they asked and the channel they asked from
-        # into the modal so we can retrieve it in the next section
-        new_modal['blocks'][0]['text']['text'] = \
-            modal_start['blocks'][0]['text']['text'].format(
-                data.get('text'), data.get('channel_name')
-            )
-
-        new_modal['blocks'][4]['elements'][0]['text'] = \
-            modal_start['blocks'][4]['elements'][0]['text'].format(data.get('user_id'))
-
-        client.views_open(
-            trigger_id=trigger_id,
-            view=new_modal
-        )
+    process_question(request)
     # return an empty string per slack docs
     return ("", 200)
 

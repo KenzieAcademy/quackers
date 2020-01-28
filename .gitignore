@@ -2,3 +2,4 @@
 .idea/
 .venv/
 slack_data.json
+test.py
