@@ -201,8 +201,7 @@ def post_message_to_user(user_id, channel, question):
 
 
 @fire_and_forget
-def process_question_followup(request):
-    data = request.form.to_dict()
+def process_question_followup(data):
     # the payload is a dict... as a string.
     data['payload'] = json.loads(data['payload'])
     logger.debug(pp(data['payload']))
@@ -243,7 +242,7 @@ def process_question_followup(request):
 
 @app.route('/questionfollowup/', methods=['POST'])
 def questionfollowup():
-    process_question_followup(request)
+    process_question_followup(request.form.to_dict())
     return ("", 200)
 
 
