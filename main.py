@@ -1,13 +1,12 @@
+import asyncio
 import json
+import logging
 import os
 import random
 from copy import deepcopy
 from datetime import datetime
 from pprint import pprint as pp
-import logging
-import asyncio
 
-import requests
 import dotenv
 import slack
 from airtable import Airtable
@@ -59,6 +58,7 @@ logger.addHandler(hdlr)
 logger.setLevel(logging.WARNING)
 
 
+# https://stackoverflow.com/a/53255955
 def fire_and_forget(f):
     def wrapped(*args, **kwargs):
         return asyncio.get_event_loop().run_in_executor(None, f, *args, *kwargs)
@@ -240,15 +240,8 @@ def process_question_followup(data):
     post_message_to_user(user_id=user_id, channel=channel, question=original_q)
 
 
-@app.route('/questionfollowup/', methods=['POST'])
-def questionfollowup():
-    process_question_followup(request.form.to_dict())
-    return ("", 200)
-
-
-@app.route('/question/', methods=['POST'])
-def question():
-    data = request.form.to_dict()
+@fire_and_forget
+def process_question(data):
     if trigger_id := data.get('trigger_id'):
         logger.debug(pp(data))
         # copy the modal so that we don't accidentally modify the version in memory.
@@ -268,7 +261,19 @@ def question():
             trigger_id=trigger_id,
             view=new_modal
         )
-    # return an empty string per slack docs
+
+
+@app.route('/questionfollowup/', methods=['POST'])
+def questionfollowup():
+    process_question_followup(request.form.to_dict())
+    return ("", 200)
+
+
+@app.route('/question/', methods=['POST'])
+def question():
+    data = request.form.to_dict()
+    process_question(data)
+    # return an empty string as fast as possible per slack docs
     return ("", 200)
 
 
