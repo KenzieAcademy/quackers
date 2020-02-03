@@ -45,13 +45,14 @@ emoji_list = [
 
 dotenv.load_dotenv()
 client = slack.WebClient(token=os.environ["BOT_USER_OAUTH_ACCESS_TOKEN"])
-a_s = Airtable(os.environ.get('AIRTABLE_BASE_ID'), 'Students')
-a_q = Airtable(os.environ.get('AIRTABLE_BASE_ID'), 'QBert Questions')
+airtable_students = Airtable(os.environ.get('AIRTABLE_BASE_ID'), 'Students')
+airtable_instructors = Airtable(os.environ.get('AIRTABLE_BASE_ID'), 'Instructors')
+airtable_questions = Airtable(os.environ.get('AIRTABLE_BASE_ID'), 'QBert Questions')
 
 app = Flask(__name__)
 
 logger = logging.getLogger('qbert')
-hdlr = logging.FileHandler('/var/tmp/qbert.log')
+hdlr = logging.FileHandler('qbert.log')
 formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 hdlr.setFormatter(formatter)
 logger.addHandler(hdlr)
@@ -153,6 +154,7 @@ error_modal = {
     ]
 }
 
+
 def get_coach_channel(c):
     result = channel_map[c]
     if not result:
@@ -175,9 +177,7 @@ def post_message_to_coaches(user, channel, question, info):
     message = (
         f"Received request for help from @{user} with the following info:\n\n"
         f"Question: {question}\n"
-        f"Additional info: {info}\n\n"
-        "React to this with :heavy_check_mark: if you'll reach out to the student"
-        " and resolve."
+        f"Additional info: {info}"
     )
 
     client.chat_postMessage(
@@ -196,16 +196,28 @@ def post_message_to_coaches(user, channel, question, info):
 
 
 def post_to_airtable(user_id, slack_username, channel, question, info):
-    student = a_s.search('Slack ID', user_id)
+    # We want to log both student interactions and instructor interactions.
+    # We'll check the student table first (because it's most likely that a
+    # student is the one using the system) and then if we don't find it,
+    # we'll poke the instructor table for a result. If that still fails,
+    # send it to Unresolved User.
     student_id = None
-    if student != []:
+    instructor_id = None
+
+    if student := airtable_students.search('Slack ID', user_id):
         student_id = student[0]['id']
-    a_q.insert(
+
+    if not student_id:
+        if instructor := airtable_instructors.search('Slack ID', user_id):
+            instructor_id = instructor[0]['id']
+
+    airtable_questions.insert(
         {
             'Question': question,
             'Additional Info': info,
             'Channel': channel,
             'Student': [student_id] if student_id else None,
+            'Instructor': [instructor_id] if instructor_id else None,
             'Unresolved User': slack_username if not student_id else '',
             'Date': datetime.now().isoformat()
         }
