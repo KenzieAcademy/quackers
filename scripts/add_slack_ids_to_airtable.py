@@ -20,6 +20,9 @@ students = a.get_all()
 
 for record in students:
     student_email = record['fields'].get('Email')
+    if record['fields'].get('Slack ID'):
+
+        print("Record {record['fields']['Full Name']} is up to date!")
     if not student_email:
         continue
     for i in processed_results:
@@ -38,17 +41,23 @@ print("Updated Slack IDs: ", len(processed))
 
 students = a.get_all()
 no_slack_id = [u for u in students if u['fields'].get('Slack ID') == None]
+if len(no_slack_id) == 0:
+    print(
+        "Everyone present and accounted for! All student records in Airtable"
+        " have a Slack ID."
+    )
+else:
+    print("Found {} students in Airtable with no Slack ID.".format(len(no_slack_id)))
+    print("This will require manual intervention.")
+    print()
+    print("Accounts that need attention:")
+    for i in no_slack_id:
+        try:
+            print(i['fields']['Full Name'])
+        except KeyError:
+            print(i)
 
-print("Found {} students in Airtable with no Slack ID.".format(len(no_slack_id)))
-print("This will require manual intervention.")
 print()
-print("Accounts that need attention:")
-for i in no_slack_id:
-    try:
-        print(i['fields']['Full Name'])
-    except KeyError:
-        print(i)
-
 print('The full unprocessed results from Slack are found in slack_data.json')
 
 with open('slack_data.json', 'w') as f:
