@@ -12,20 +12,40 @@ import slack
 from airtable import Airtable
 from flask import Flask, request
 
+from qbert.helpers import fire_and_forget
+from qbert.data import error_modal, start_modal
+from qbert.core import post_message_to_coaches, post_message_to_user
+
+from qbert.core import process_question, process_question_followup
+
 # *********************************************
 # EDIT HERE
 # *********************************************
 
 # map is in the following format:
-# string name of originating channel: string name of coach channel
+# "channel-name-to-listen-on": {
+#   "target": "channel-name-to-post-to",
+#   "airtable": "se" if it goes to the SE airtable or "ux" if it goes to the UX airtable
+# }
 # example:
 # 'joe-slackbot-testing': 'joe-slackbot-coaches'
+
 channel_map = {
-    'joe-slackbot-testing': 'joe-slackbot-coaches',
-    'se-january-2020': 'se-jan-2020-coaches',
-    'se-7': 'staff-se7',
-    'se-6': 'se-q4-staff',
-    'se-october-2019': 'se-october-coaches',
+    'joe-slackbot-testing': {
+        'target': 'joe-slackbot-coaches', 'airtable': 'se'
+    },
+    'se-january-2020': {
+        'target': 'se-jan-2020-coaches', 'airtable': 'se'
+    },
+    'se-7': {
+        'target': 'staff-se7', 'airtable': 'se'
+    },
+    'se-6': {
+        'target': 'se-q4-staff', 'airtable': 'se'
+    },
+    'se-october-2019': {
+        'target': 'se-october-coaches', 'airtable': 'se'
+    },
 }
 
 # for responses returned to the student
@@ -43,12 +63,6 @@ emoji_list = [
 # DO NOT EDIT BEYOND THIS POINT
 # *********************************************
 
-dotenv.load_dotenv()
-client = slack.WebClient(token=os.environ["BOT_USER_OAUTH_ACCESS_TOKEN"])
-airtable_students = Airtable(os.environ.get('AIRTABLE_BASE_ID'), 'Students')
-airtable_instructors = Airtable(os.environ.get('AIRTABLE_BASE_ID'), 'Instructors')
-airtable_questions = Airtable(os.environ.get('AIRTABLE_BASE_ID'), 'QBert Questions')
-
 app = Flask(__name__)
 
 logger = logging.getLogger('qbert')
@@ -59,263 +73,17 @@ logger.addHandler(hdlr)
 logger.setLevel(logging.WARNING)
 
 
-# https://stackoverflow.com/a/53255955
-def fire_and_forget(f):
-    def wrapped(*args, **kwargs):
-        return asyncio.get_event_loop().run_in_executor(None, f, *args, *kwargs)
-
-    return wrapped
-
-
-modal_start = {
-    "type": "modal",
-    "title": {
-        "type": "plain_text",
-        "text": "QBert!",
-        "emoji": True
-    },
-    "submit": {
-        "type": "plain_text",
-        "text": "Submit",
-        "emoji": True
-    },
-    "close": {
-        "type": "plain_text",
-        "text": "Cancel",
-        "emoji": True
-    },
-    "blocks": [
-        {
-            "type": "section",
-            "text": {
-                "type": "plain_text",
-                "text": "The question was: {0}\nYour channel: {1}",
-                "emoji": True
-            }
-        },
-        {
-            "type": "divider"
-        },
-        {
-            "type": "input",
-            "element": {
-                "type": "plain_text_input",
-                "action_id": "ml_input",
-                "multiline": True
-            },
-            "label": {
-                "type": "plain_text",
-                "text": "What else should we know about the problem you're facing?"
-            },
-            "hint": {
-                "type": "plain_text",
-                "text": "Any context you can provide will help!"
-            }
-        },
-        {
-            "type": "divider"
-        },
-        {
-            "type": "context",
-            "elements": [
-                {
-                    "type": "mrkdwn",
-                    "text": "*NOTE*: Your question won't get sent to the coaches until you click submit!\nID: {}"
-                }
-            ]
-        }
-    ]
-}
-error_modal = {
-    "type": "modal",
-    "title": {
-        "type": "plain_text",
-        "text": "Hey! Listen! 🌟",
-        "emoji": True
-    },
-    "close": {
-        "type": "plain_text",
-        "text": "OK",
-        "emoji": True
-    },
-    "blocks": [
-        {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": "I'm not set up to run in this channel; you'll have to call me from your cohort channel. Sorry!"
-            }
-        },
-        {
-            "type": "image",
-            "image_url": "https://gamepedia.cursecdn.com/zelda_gamepedia_en/0/08/OoT3D_Navi_Artwork.png?version=61b243ef9637615abdf7534b17361c7a",
-            "alt_text": "Navi from The Legend of Zelda - a blue glowing orb with fairy wings. Artwork from the Ocarina of Time 3D."
-        }
-    ]
-}
-
-
-def get_coach_channel(c):
-    result = channel_map[c]
-    if not result:
-        raise Exception("No matching channel found!")
-    if not result.startswith("#"):
-        result = "#{}".format(result)
-
-    return result
-
-
-def get_channel_id(channel_name):
-    channels = client.users_conversations().data['channels']
-    for c in channels:
-        if c.get('name') == channel_name:
-            return c['id']
-
-
-def post_message_to_coaches(user, channel, question, info):
-    ch = get_coach_channel(channel)
-    message = (
-        f"Received request for help from @{user} with the following info:\n\n"
-        f"Question: {question}\n"
-        f"Additional info: {info}"
-    )
-
-    client.chat_postMessage(
-        channel=ch,
-        blocks=[
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": message
-                }
-            }
-        ],
-        icon_emoji=":qbert:"
-    )
-
-
-def post_to_airtable(user_id, slack_username, channel, question, info):
-    # We want to log both student interactions and instructor interactions.
-    # We'll check the student table first (because it's most likely that a
-    # student is the one using the system) and then if we don't find it,
-    # we'll poke the instructor table for a result. If that still fails,
-    # send it to Unresolved User.
-    student_id = None
-    instructor_id = None
-
-    if student := airtable_students.search('Slack ID', user_id):
-        student_id = student[0]['id']
-
-    if not student_id:
-        if instructor := airtable_instructors.search('Slack ID', user_id):
-            instructor_id = instructor[0]['id']
-
-    airtable_questions.insert(
-        {
-            'Question': question,
-            'Additional Info': info,
-            'Channel': channel,
-            'Student': [student_id] if student_id else None,
-            'Instructor': [instructor_id] if instructor_id else None,
-            'Unresolved User': slack_username if not student_id else '',
-            'Date': datetime.now().isoformat()
-        }
-    )
-
-
-def post_message_to_user(user_id, channel, question):
-    channel = get_channel_id(channel_name=channel)
-    client.chat_postEphemeral(
-        user=user_id,
-        channel=channel,
-        text=(
-            "Thanks for reaching out! One of the coaches or facilitators will be"
-            " with you shortly! :{}: Your question was: {}".format(
-                random.choice(emoji_list), question
-            )
-        )
-    )
-
-
-@fire_and_forget
-def process_question_followup(data):
-    # the payload is a dict... as a string.
-    data['payload'] = json.loads(data['payload'])
-    logger.debug(pp(data['payload']))
-
-    # slack randomizes the block names. That means the location that the response will
-    # be in won't always be the same. We need to pull the ID out of the rest of the
-    # response before we go hunting for the data we need.
-    # Bonus: every block will have an ID! Just... only one of them will be right.
-    channel = None
-    original_q = None
-    addnl_info_block_id = None
-    user_id = None
-
-    for block in data['payload']['view']['blocks']:
-        if block.get('type') == "input":
-            addnl_info_block_id = block.get('block_id')
-        if block.get('type') == "section":
-            previous_data = block['text']['text'].split("\n")
-            original_q = previous_data[0][previous_data[0].index(":") + 2:]
-            channel = previous_data[1][previous_data[1].index(":") + 2:]
-        if block.get('type') == "context":
-            user_id = block['elements'][0]['text'].split(':')[2].strip()
-
-    dv = data['payload']['view']
-
-    additional_info = dv['state']['values'][addnl_info_block_id]['ml_input']['value']
-    username = data['payload']['user']['username']
-
-    post_message_to_coaches(
-        user=username,
-        channel=channel,
-        question=original_q,
-        info=additional_info
-    )
-    post_to_airtable(user_id, username, channel, original_q, additional_info)
-    post_message_to_user(user_id=user_id, channel=channel, question=original_q)
-
-
 @app.route('/questionfollowup/', methods=['POST'])
 def questionfollowup():
-    process_question_followup(request.form.to_dict())
+    process_question_followup(request.form.to_dict(), channel_map, emoji_list)
+    # this endpoint spawns another thread to do its dirty work, so we need to
+    # return the 200 OK ASAP so that Slack will be happy.
     return ("", 200)
 
 
 @app.route('/question/', methods=['POST'])
 def question():
-    data = request.form.to_dict()
-    if trigger_id := data.get('trigger_id'):
-        # first we need to verify that we're being called in the right place
-        if data.get('channel_name') not in channel_map.keys():
-            client.views_open(
-                trigger_id=trigger_id,
-                view=error_modal
-            )
-            return ("", 200)
-
-        logger.debug(pp(data))
-        # copy the modal so that we don't accidentally modify the version in memory.
-        # the garbage collector will take care of the copies later.
-        new_modal = deepcopy(modal_start)
-        # stick the original question they asked and the channel they asked from
-        # into the modal so we can retrieve it in the next section
-        new_modal['blocks'][0]['text']['text'] = \
-            modal_start['blocks'][0]['text']['text'].format(
-                data.get('text'), data.get('channel_name')
-            )
-
-        new_modal['blocks'][4]['elements'][0]['text'] = \
-            modal_start['blocks'][4]['elements'][0]['text'].format(data.get('user_id'))
-
-        client.views_open(
-            trigger_id=trigger_id,
-            view=new_modal
-        )
-    # return an empty string as fast as possible per slack docs
-    return ("", 200)
+    return process_question(request.form.to_dict(), channel_map)
 
 
 if __name__ == "__main__":

@@ -7,6 +7,10 @@ import json
 dotenv.load_dotenv()
 client = slack.WebClient(token=os.environ["BOT_USER_OAUTH_ACCESS_TOKEN"])
 
+a = Airtable(os.environ.get('SE_AIRTABLE_BASE_ID'), 'Students')
+# a = Airtable(os.environ.get('UX_AIRTABLE_BASE_ID'), 'Students')
+students = a.get_all()
+
 result = client.users_list()
 users = [u for u in result.data['members'] if u['deleted'] is False]
 processed_results = [
@@ -14,9 +18,6 @@ processed_results = [
         u['real_name'], u['profile']['display_name'], u['profile'].get('email'), u['id']
     ] for u in users
 ]
-
-a = Airtable(os.environ.get('AIRTABLE_BASE_ID'), 'Students')
-students = a.get_all()
 
 for record in students:
     student_email = record['fields'].get('Email')
@@ -29,7 +30,12 @@ for record in students:
         if i[2]:
             i[2] = i[2].lower()
         if student_email.lower() == i[2]:
-            print('Updating {}'.format(record['fields']['Full Name']))
+            try:
+                # SE airtable
+                print('Updating {}'.format(record['fields']['Full Name']))
+            except KeyError:
+                # UX airtable
+                print('Updating {}'.format(record['fields']['Name']))
             a.update(record['id'], {'Slack ID': i[3]})
             i.append('PROCESSED')
 
