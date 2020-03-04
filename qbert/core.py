@@ -1,9 +1,9 @@
 import json
+import logging
 import os
 import random
 from copy import deepcopy
 from datetime import datetime
-import logging
 
 import dotenv
 import slack
