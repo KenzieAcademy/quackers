@@ -60,15 +60,12 @@ def post_message_to_coaches(user, channel, question, info, client, channel_map):
 def post_to_airtable(user_id, slack_username, channel, channel_map, question, info):
     # We want to log both student interactions and instructor interactions.
     # We'll check the student table first (because it's most likely that a
-    # student is the one using the system), but overall we'll follow this
-    # route for resolving a user:
+    # student is the one using the system), then check for an instructor.
+    # The mapping in main.py is used to select which set of airtable instances
+    # we check, mostly just to save time.
     #
-    # * SE students
-    # * UX students
-    # * SE instructor
-    # * UX instructor
-    #
-    # ...no response? Screw it, send it to Unresolved User.
+    # ...and if we don't get a positive response from AirTable? Send it to
+    # Unresolved User.
 
     # make pycharm happy
     person_id = None
@@ -111,13 +108,11 @@ def post_to_airtable(user_id, slack_username, channel, channel_map, question, in
         'Question': question,
         'Additional Info': info,
         'Channel': channel,
-        'Student': [student_id],
-        'Instructor': [instructor_id],
-        'Unresolved User': [unresolved_user_id],
+        'Student': [student_id] if student_id else None,
+        'Instructor': [instructor_id] if instructor_id else None,
+        'Unresolved User': unresolved_user_id if unresolved_user_id else None,
         'Date': datetime.now().isoformat()
     }
-
-    logger.warning(data)
 
     airtable_target.insert(data)
 
@@ -140,7 +135,6 @@ def post_message_to_user(user_id, channel, question, emoji_list, client):
 def process_question_followup(data, channel_map, emoji_list):
     # the payload is a dict... as a string.
     data['payload'] = json.loads(data['payload'])
-    logger.debug(pp(data['payload']))
 
     # slack randomizes the block names. That means the location that the response will
     # be in won't always be the same. We need to pull the ID out of the rest of the
@@ -196,7 +190,6 @@ def process_question(data, channel_map):
             )
             return ("", 200)
 
-        logger.debug(pp(data))
         # copy the modal so that we don't accidentally modify the version in memory.
         # the garbage collector will take care of the copies later.
         start_modal_copy = deepcopy(start_modal)

@@ -1,20 +1,6 @@
-import asyncio
-import json
 import logging
-import os
-import random
-from copy import deepcopy
-from datetime import datetime
-from pprint import pprint as pp
 
-import dotenv
-import slack
-from airtable import Airtable
 from flask import Flask, request
-
-from qbert.helpers import fire_and_forget
-from qbert.data import error_modal, start_modal
-from qbert.core import post_message_to_coaches, post_message_to_user
 
 from qbert.core import process_question, process_question_followup
 
