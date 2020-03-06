@@ -2,37 +2,38 @@ import logging
 
 from flask import Flask, request
 
-from qbert.core import process_question, process_question_followup
+from quackers.core import process_question, process_question_followup, client
+from quackers.helpers import ChannelMap
 
 # *********************************************
 # EDIT HERE
 # *********************************************
 
 # map is in the following format:
-# "channel-name-to-listen-on": {
-#   "target": "channel-name-to-post-to",
-#   "airtable": "se" if it goes to the SE airtable or "ux" if it goes to the UX airtable
-# }
-# example:
-# 'joe-slackbot-testing': 'joe-slackbot-coaches'
+# (channel-to-listen-to, coach-channel, program-this-channel-set-belongs-to)
 
-channel_map = {
-    'joe-slackbot-testing': {
-        'target': 'joe-slackbot-coaches', 'airtable': 'se'
-    },
-    'se-january-2020': {
-        'target': 'se-jan-2020-coaches', 'airtable': 'se'
-    },
-    'se-7': {
-        'target': 'staff-se7', 'airtable': 'se'
-    },
-    'se-6': {
-        'target': 'se-q4-staff', 'airtable': 'se'
-    },
-    'se-october-2019': {
-        'target': 'se-october-coaches', 'airtable': 'se'
-    },
-}
+UX = 'ux'
+SE = 'se'
+
+channel_map = ChannelMap(slack_conn=client)
+
+channels = [
+    ("joe-slackbot-testing", "joe-slackbot-coaches", UX),
+    ("se-january-2020", "se-jan-2020-coaches", SE),
+    ("se-7", "staff-se7", SE),
+    ("se-6", "se-q4-staff", SE),
+    ("se-october-2019", "se-october-coaches", SE),
+    ("ux-5-indy", "ux-triage-uxd", UX),
+    ("ux-5-remote", "ux-triage-uxd", UX),
+    ("ux-6-remote", "ux-triage-uxd", UX),
+    ("ux-6-indy", "ux-triage-uxd", UX),
+    ("ux-4-indy", "ux-triage-uie", UX),
+    ("ux-4-remote", "ux-triage-uie", UX)
+]
+for channel in channels:
+    channel_map.add_channel(
+        listen_to=channel[0], post_to=channel[1], airtable=channel[2]
+    )
 
 # for responses returned to the student
 emoji_list = [
@@ -51,8 +52,8 @@ emoji_list = [
 
 app = Flask(__name__)
 
-logger = logging.getLogger('qbert')
-hdlr = logging.FileHandler('qbert.log')
+logger = logging.getLogger('quackers')
+hdlr = logging.FileHandler('quackers.log')
 formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 hdlr.setFormatter(formatter)
 logger.addHandler(hdlr)

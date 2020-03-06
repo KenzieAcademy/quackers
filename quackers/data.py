@@ -2,7 +2,7 @@ start_modal = {
     "type": "modal",
     "title": {
         "type": "plain_text",
-        "text": "QBert!",
+        "text": "Quackers!",
         "emoji": True
     },
     "submit": {

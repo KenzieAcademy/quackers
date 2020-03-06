@@ -9,9 +9,8 @@ import dotenv
 import slack
 from airtable import Airtable
 
-from qbert.data import error_modal, start_modal
-from qbert.helpers import fire_and_forget
-from qbert.helpers import get_coach_channel, get_channel_id, get_base
+from quackers.data import error_modal, start_modal
+from quackers.helpers import fire_and_forget
 
 DEBUG = True
 
@@ -24,17 +23,17 @@ client = slack.WebClient(token=os.environ["BOT_USER_OAUTH_ACCESS_TOKEN"])
 
 se_students = Airtable(os.environ.get('SE_AIRTABLE_BASE_ID'), 'Students')
 se_instructors = Airtable(os.environ.get('SE_AIRTABLE_BASE_ID'), 'Instructors')
-se_questions = Airtable(os.environ.get('SE_AIRTABLE_BASE_ID'), 'QBert Questions')
+se_questions = Airtable(os.environ.get('SE_AIRTABLE_BASE_ID'), 'Quackers Questions')
 
 ux_students = Airtable(os.environ.get('UX_AIRTABLE_BASE_ID'), 'Students')
 ux_instructors = Airtable(os.environ.get('UX_AIRTABLE_BASE_ID'), 'Instructors')
-ux_questions = Airtable(os.environ.get('UX_AIRTABLE_BASE_ID'), 'QBert Questions')
+ux_questions = Airtable(os.environ.get('UX_AIRTABLE_BASE_ID'), 'Quackers Questions')
 
-logger = logging.getLogger('qbert.core')
+logger = logging.getLogger('quackers.core')
 
 
 def post_message_to_coaches(user, channel, question, info, client, channel_map):
-    ch = get_coach_channel(channel, channel_map)
+    ch = channel_map.get_coach_channel(channel)
     message = (
         f"Received request for help from @{user} with the following info:\n\n"
         f"Question: {question}\n"
@@ -52,7 +51,7 @@ def post_message_to_coaches(user, channel, question, info, client, channel_map):
                 }
             }
         ],
-        icon_emoji=":qbert:"
+        icon_emoji=":quackers:"
     )
 
 
@@ -70,7 +69,7 @@ def post_to_airtable(user_id, slack_username, channel, channel_map, question, in
     person_id = None
     option = None
 
-    base = get_base(channel, channel_map).lower()  # .lower() == safety check
+    base = channel_map.get_base(channel).lower()  # .lower() == safety check
 
     if base == "se":
         airtable_target = se_questions
@@ -116,8 +115,8 @@ def post_to_airtable(user_id, slack_username, channel, channel_map, question, in
     airtable_target.insert(data)
 
 
-def post_message_to_user(user_id, channel, question, emoji_list, client):
-    channel = get_channel_id(channel, client)
+def post_message_to_user(user_id, channel, channel_map, question, emoji_list, client):
+    channel = channel_map.get_channel_id(channel)
     client.chat_postEphemeral(
         user=user_id,
         channel=channel,
@@ -173,6 +172,7 @@ def process_question_followup(data, channel_map, emoji_list):
     post_message_to_user(
         user_id=user_id,
         channel=channel,
+        channel_map=channel_map,
         question=original_q,
         emoji_list=emoji_list,
         client=client
