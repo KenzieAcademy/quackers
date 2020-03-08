@@ -1,5 +1,8 @@
-.env
+.env*
 .idea/
 .venv/
 slack_data.json
 test.py
+*__pycache__*
+*.log
+*egg-info/

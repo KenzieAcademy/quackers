@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "qbert"
-version = "0.1.0"
+name = "quackers"
+version = "1.0.0"
 description = "A Q&A slackbot to assist with Q1."
 authors = ["Joe Kaufeld <joe@kenzie.academy>"]
 
