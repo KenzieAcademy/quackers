@@ -18,7 +18,7 @@ SE = 'se'
 channel_map = ChannelMap(slack_conn=client)
 
 channels = [
-    ("joe-slackbot-testing", "joe-slackbot-coaches", UX),
+    ("joe-slackbot-testing", "joe-slackbot-coaches", SE),
     ("se-january-2020", "se-jan-2020-coaches", SE),
     ("se-7", "staff-se7", SE),
     ("se-6", "se-q4-staff", SE),

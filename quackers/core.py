@@ -12,7 +12,7 @@ from airtable import Airtable
 from quackers.data import error_modal, start_modal
 from quackers.helpers import fire_and_forget
 
-DEBUG = True
+DEBUG = False
 
 if DEBUG:
     dotenv.load_dotenv(".env.testing")
