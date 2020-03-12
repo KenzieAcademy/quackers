@@ -35,7 +35,11 @@ class ChannelMap(object):
         return result
 
     def get_channel_id(self, channel_name):
-        channels = self.client.users_conversations().data['channels']
+        # reference: https://github.com/KenzieAcademy/quackers/issues/8
+        # https://github.com/KenzieAcademy/quackers/issues/7
+        channels = self.client.users_conversations(
+            types="public_channel,private_channel"
+        ).data['channels']
         for c in channels:
             if c.get('name') == channel_name:
                 return c['id']
