@@ -1,9 +1,7 @@
 import threading
-import logging
+import flask
 
-
-logger = logging.getLogger("quackers.helpers")
-
+APP = flask.current_app
 
 # https://stackoverflow.com/a/59043636
 def fire_and_forget(f, *args, **kwargs):
@@ -23,7 +21,7 @@ class ChannelMap(object):
         if not listen_to or not post_to or not airtable:
             raise ValueError("Must pass in all three variables!")
         self.mapping.update({listen_to: {'target': post_to, 'airtable': airtable}})
-        logger.info(f"Registered {listen_to} -> {post_to} for the {airtable.upper()} program")
+        APP.logger.info(f"Registered {listen_to} -> {post_to} for the {airtable.upper()} program")
 
     def get_coach_channel(self, c):
         result = self.mapping[c]
@@ -43,6 +41,7 @@ class ChannelMap(object):
         for c in channels:
             if c.get('name') == channel_name:
                 return c['id']
+        APP.logger.error("Could not find matching channel!")
 
     def get_base(self, channel):
         result = self.mapping[channel]
