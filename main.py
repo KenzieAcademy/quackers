@@ -62,7 +62,8 @@ else:
 
 @app.route('/questionfollowup/', methods=['POST'])
 def questionfollowup():
-    process_question_followup(request.form.to_dict(), channel_map, emoji_list)
+    with app.app_context():
+        process_question_followup(request.form.to_dict(), channel_map, emoji_list)
     # this endpoint spawns another thread to do its dirty work, so we need to
     # return the 200 OK ASAP so that Slack will be happy.
     return ("", 200)
@@ -70,7 +71,8 @@ def questionfollowup():
 
 @app.route('/question/', methods=['POST'])
 def question():
-    return process_question(request.form.to_dict(), channel_map)
+    with app.app_context():
+        return process_question(request.form.to_dict(), channel_map)
 
 
 if __name__ == "__main__":
