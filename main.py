@@ -52,12 +52,12 @@ emoji_list = [
 
 app = Flask(__name__)
 
-logger = logging.getLogger('quackers')
-hdlr = logging.FileHandler('quackers.log')
-formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-hdlr.setFormatter(formatter)
-logger.addHandler(hdlr)
-logger.setLevel(logging.WARNING)
+if __name__ != "__main__":
+    gunicorn_logger = logging.getLogger("gunicorn.error")
+    app.logger.handlers = gunicorn_logger.handlers
+    app.logger.setLevel(gunicorn_logger.level)
+else:
+    app.logger.setLevel(logging.INFO)
 
 
 @app.route('/questionfollowup/', methods=['POST'])
