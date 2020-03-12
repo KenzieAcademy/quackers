@@ -6,7 +6,6 @@ from copy import deepcopy
 from datetime import datetime
 
 import dotenv
-from flask import g
 import slack
 from airtable import Airtable
 
@@ -32,7 +31,7 @@ ux_questions = Airtable(os.environ.get('UX_AIRTABLE_BASE_ID'), 'Quackers Questio
 
 
 def post_message_to_coaches(user, channel, question, info, client, channel_map):
-    g.logger.info(f'Posting question from {user} to {channel}!')
+    # g.logger.info(f'Posting question from {user} to {channel}!')
     ch = channel_map.get_coach_channel(channel)
     message = (
         f"Received request for help from @{user} with the following info:\n\n"
