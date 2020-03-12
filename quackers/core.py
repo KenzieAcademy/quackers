@@ -29,9 +29,11 @@ ux_students = Airtable(os.environ.get('UX_AIRTABLE_BASE_ID'), 'Students')
 ux_instructors = Airtable(os.environ.get('UX_AIRTABLE_BASE_ID'), 'Instructors')
 ux_questions = Airtable(os.environ.get('UX_AIRTABLE_BASE_ID'), 'Quackers Questions')
 
+logger = logging.getLogger('gunicorn.error')
+
 
 def post_message_to_coaches(user, channel, question, info, client, channel_map):
-    # g.logger.info(f'Posting question from {user} to {channel}!')
+    logger.info(f'Posting question from {user} to {channel}!')
     ch = channel_map.get_coach_channel(channel)
     message = (
         f"Received request for help from @{user} with the following info:\n\n"
