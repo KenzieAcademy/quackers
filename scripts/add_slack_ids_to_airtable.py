@@ -7,7 +7,8 @@ import json
 dotenv.load_dotenv()
 client = slack.WebClient(token=os.environ["BOT_USER_OAUTH_ACCESS_TOKEN"])
 
-a = Airtable(os.environ.get('SE_AIRTABLE_BASE_ID'), 'Students')
+# a = Airtable(os.environ.get('SE_AIRTABLE_BASE_ID'), 'Students')
+a = Airtable(os.environ.get('CT_AIRTABLE_BASE_ID'), 'Students')
 # a = Airtable(os.environ.get('UX_AIRTABLE_BASE_ID'), 'Students')
 students = a.get_all()
 
