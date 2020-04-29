@@ -135,6 +135,7 @@ def process_question_followup(data, channel_map, emoji_list):
     # the payload is a dict... as a string.
     data['payload'] = json.loads(data['payload'])
 
+    # TODO: add example response from slack
     # slack randomizes the block names. That means the location that the response will
     # be in won't always be the same. We need to pull the ID out of the rest of the
     # response before we go hunting for the data we need.

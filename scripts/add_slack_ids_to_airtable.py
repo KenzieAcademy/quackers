@@ -7,8 +7,8 @@ import json
 dotenv.load_dotenv()
 client = slack.WebClient(token=os.environ["BOT_USER_OAUTH_ACCESS_TOKEN"])
 
-# a = Airtable(os.environ.get('SE_AIRTABLE_BASE_ID'), 'Students')
-a = Airtable(os.environ.get('CT_AIRTABLE_BASE_ID'), 'Students')
+a = Airtable(os.environ.get('SE_AIRTABLE_BASE_ID'), 'Students')
+# a = Airtable(os.environ.get('CT_AIRTABLE_BASE_ID'), 'Students')
 # a = Airtable(os.environ.get('UX_AIRTABLE_BASE_ID'), 'Students')
 students = a.get_all()
 
@@ -23,8 +23,11 @@ processed_results = [
 for record in students:
     student_email = record['fields'].get('Email')
     if record['fields'].get('Slack ID'):
-
-        print("Record {record['fields']['Full Name']} is up to date!")
+        try:
+            fname = record['fields']['Name']
+            print(f"Record {fname} is up to date!")
+        except KeyError:
+            pass
     if not student_email:
         continue
     for i in processed_results:
@@ -33,7 +36,7 @@ for record in students:
         if student_email.lower() == i[2]:
             try:
                 # SE airtable
-                print('Updating {}'.format(record['fields']['Full Name']))
+                print('Updating {}'.format(record['fields']['Name']))
             except KeyError:
                 # UX airtable
                 print('Updating {}'.format(record['fields']['Name']))
@@ -60,7 +63,7 @@ else:
     print("Accounts that need attention:")
     for i in no_slack_id:
         try:
-            print(i['fields']['Full Name'])
+            print(i['fields']['Name'])
         except KeyError:
             print(i)
 
