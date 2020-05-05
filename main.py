@@ -19,14 +19,16 @@ channel_map = ChannelMap(slack_conn=client)
 
 channels = [
     ("joe-slackbot-testing", "joe-slackbot-coaches", SE),
+    # software engineering channels
     ("se-april-2020", "se-april-2020-coaches", SE),
     ("se-january-2020", "se-jan-2020-coaches", SE),
     ("se-7", "se-q4-staff", SE),
     ("se-october-2019", "se-q3-staff", SE),
-    ("ux-5-indy", "ux-triage-uxd", UX),
-    ("ux-5-remote", "ux-triage-uxd", UX),
-    ("ux-6-remote", "ux-triage-uxd", UX),
-    ("ux-6-indy", "ux-triage-uxd", UX),
+    # user experience channels
+    ("ux-5", "ux-triage-uxd", UX),
+    ("ux-6", "ux-triage-uxd", UX),
+    ("ux-7", "ux-triage-uxd", UX),
+    # old maps
     ("ux-4-indy", "ux-triage-uie", UX),
     ("ux-4-remote", "ux-triage-uie", UX)
 ]
