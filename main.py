@@ -25,7 +25,7 @@ channels = [
     ("se-7", "se-q4-staff", SE),
     ("se-october-2019", "se-q3-staff", SE),
     # user experience channels
-    ("ux-5", "ux-triage-uxd", UX),
+    ("ux-5", "ux-triage-uie", UX),
     ("ux-6", "ux-triage-uxd", UX),
     ("ux-7", "ux-triage-uxd", UX),
     # old maps
